@@ -46,6 +46,7 @@ import java.util.Locale;
 public class SketchTaggerActivity extends AppCompatActivity {
     private ArrayList<ListItem> listData;
     SQLiteDatabase db;
+    SQLiteDatabase bigDb;
     TextView tagField;
     EditText searchField;
     ListView lv;
@@ -66,6 +67,10 @@ public class SketchTaggerActivity extends AppCompatActivity {
 
         db = this.openOrCreateDatabase("images", Context.MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS IMAGES (IMAGE BLOB, DATE DATETIME, TAGS TEXT)");
+
+        bigDb = this.openOrCreateDatabase("both", Context.MODE_PRIVATE, null);
+        bigDb.execSQL("CREATE TABLE IF NOT EXISTS BOTH (IMAGE BLOB, DATE DATETIME, TAGS TEXT, TYPE TEXT)");
+
 
         tagField = findViewById(R.id.generated_tags);
         searchField = findViewById(R.id.tag_search_edit_box);
@@ -145,7 +150,7 @@ public class SketchTaggerActivity extends AppCompatActivity {
         HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
         GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
         Vision.Builder builder = new Vision.Builder(httpTransport, jsonFactory, null);
-        builder.setVisionRequestInitializer(new VisionRequestInitializer(Key.API_KEY));
+        builder.setVisionRequestInitializer(new VisionRequestInitializer(Key.GOOGLE_API_KEY));
         Vision vision = builder.build();
 
         // CALL Vision.Images.Annotate
@@ -260,6 +265,9 @@ public class SketchTaggerActivity extends AppCompatActivity {
         cv.put("DATE", formattedDateTime);
         cv.put("TAGS", tagStrings);
         db.insert("IMAGES", null, cv);
+
+        cv.put("TYPE", "sketch");
+        bigDb.insert("BOTH", null, cv);
     }
 
     public void onClear(View view) {

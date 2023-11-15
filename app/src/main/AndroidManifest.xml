@@ -25,6 +25,7 @@
         </activity>
         <activity android:name=".PhotoTaggerActivity" />
         <activity android:name=".SketchTaggerActivity" />
+        <activity android:name=".StoryTellerActivity" />
     </application>
 
 </manifest>
