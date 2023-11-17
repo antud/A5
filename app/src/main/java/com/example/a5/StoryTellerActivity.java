@@ -3,6 +3,7 @@ package com.example.a5;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -89,7 +90,6 @@ public class StoryTellerActivity extends AppCompatActivity {
         });
 
 
-
     }
 
     private void updateImageList() {
@@ -99,7 +99,100 @@ public class StoryTellerActivity extends AppCompatActivity {
     }
 
     public void onFind(View view) {
-        showLatestImages();
+        Cursor c;
+        String tagText = searchField.getText().toString();
+        ArrayList<ListItem> searchResults = new ArrayList<>();
+
+        isSketchIncluded = includeSketchesToggle.isChecked();
+
+        if (tagText.equals("")) {
+            searchResults = showLatestImages();
+        } else {
+            try {
+                if (isSketchIncluded) {
+                    // split entry by commas
+                    String[] searchTags = tagText.split(",");
+
+                    // make query for each tag, combine with or
+                    StringBuilder queryBuilder = new StringBuilder();
+                    queryBuilder.append("SELECT * FROM BOTH WHERE ");
+
+                    for (int i = 0; i < searchTags.length; i++) {
+                        if (i > 0) {
+                            queryBuilder.append(" OR ");
+                        }
+                        queryBuilder.append("TAGS LIKE ?");
+                    }
+
+                    queryBuilder.append(" ORDER BY DATE DESC");
+                    String query = queryBuilder.toString();
+
+                    // arr for each param of search tag
+                    String[] queryParameters = new String[searchTags.length];
+
+                    // run the query for each param
+                    for (int i = 0; i < searchTags.length; i++) {
+                        queryParameters[i] = "%" + searchTags[i].trim() + "%";
+                    }
+
+                    //execute the q
+                    c = bigDb.rawQuery(query, queryParameters);
+
+                    int position = 1;
+                    // populate search images
+                    while (c.moveToNext() && position <= 3) {
+                        byte[] ba = c.getBlob(0);
+                        String date = c.getString(1);
+                        String tagsInDatabase = c.getString(2);
+
+                        searchResults.add(new ListItem(BitmapFactory.decodeByteArray(ba, 0, ba.length), tagsInDatabase + "\n" + date));
+                        position++;
+                    }
+                } else {
+                    // split entry by commas
+                    String[] searchTags = tagText.split(",");
+
+                    // make query for each tag, combine with or
+                    StringBuilder queryBuilder = new StringBuilder();
+                    queryBuilder.append("SELECT * FROM BOTH WHERE TYPE = 'photo' AND ");
+
+                    for (int i = 0; i < searchTags.length; i++) {
+                        if (i > 0) {
+                            queryBuilder.append(" OR ");
+                        }
+                        queryBuilder.append("TAGS LIKE ?");
+                    }
+
+                    queryBuilder.append(" ORDER BY DATE DESC");
+                    String query = queryBuilder.toString();
+
+                    // arr for each param of search tag
+                    String[] queryParameters = new String[searchTags.length];
+
+                    // run the query for each param
+                    for (int i = 0; i < searchTags.length; i++) {
+                        queryParameters[i] = "%" + searchTags[i].trim() + "%";
+                    }
+
+                    //execute the q
+                    c = bigDb.rawQuery(query, queryParameters);
+
+                    int position = 1;
+                    // populate search images
+                    while (c.moveToNext() && position <= 3) {
+                        byte[] ba = c.getBlob(0);
+                        String date = c.getString(1);
+                        String tagsInDatabase = c.getString(2);
+
+                        searchResults.add(new ListItem(BitmapFactory.decodeByteArray(ba, 0, ba.length), tagsInDatabase + "\n" + date));
+                        position++;
+                    }
+                }
+            } catch (CursorIndexOutOfBoundsException e) {
+                //dont need to show blank image since if there is not enough found results, the list wont have an empty slot
+            }
+        }
+        adapter.updateData(searchResults);
     }
 
 

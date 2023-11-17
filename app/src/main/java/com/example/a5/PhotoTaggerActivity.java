@@ -240,12 +240,9 @@ public class PhotoTaggerActivity extends AppCompatActivity {
     //pretty much same as A3, but instead of setting the 3 image/text views mannually
     // we just add the results to the list
     public void searchTags(View view) {
-//        MyDrawingArea blank = findViewById(R.id.blank_drawing_area);
-//        Bitmap bbb = blank.getBitmap();
         Cursor c;
         String tagText = searchField.getText().toString();
         ArrayList<ListItem> searchResults = new ArrayList<>();
-//        System.out.println(tagText);
 
         if (tagText.equals("")) {
             c = db.rawQuery("SELECT * FROM PHOTOS", null);
