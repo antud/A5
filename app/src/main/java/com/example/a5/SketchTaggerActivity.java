@@ -69,7 +69,7 @@ public class SketchTaggerActivity extends AppCompatActivity {
         db.execSQL("CREATE TABLE IF NOT EXISTS IMAGES (IMAGE BLOB, DATE DATETIME, TAGS TEXT)");
 
         bigDb = this.openOrCreateDatabase("both", Context.MODE_PRIVATE, null);
-        bigDb.execSQL("CREATE TABLE IF NOT EXISTS BOTH (IMAGE BLOB, DATE DATETIME, TAGS TEXT, TYPE TEXT)");
+        bigDb.execSQL("CREATE TABLE IF NOT EXISTS BOTH (PHOTO BLOB, DATE DATETIME, TAGS TEXT, TYPE TEXT)");
 
 
         tagField = findViewById(R.id.generated_tags);
@@ -266,8 +266,12 @@ public class SketchTaggerActivity extends AppCompatActivity {
         cv.put("TAGS", tagStrings);
         db.insert("IMAGES", null, cv);
 
-        cv.put("TYPE", "sketch");
-        bigDb.insert("BOTH", null, cv);
+        ContentValues cv2 = new ContentValues();
+        cv2.put("PHOTO", ba);
+        cv2.put("DATE", formattedDateTime);
+        cv2.put("TAGS", tagStrings);
+        cv2.put("TYPE", "sketch");
+        bigDb.insert("BOTH", null, cv2);
     }
 
     public void onClear(View view) {

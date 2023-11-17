@@ -5,6 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -37,6 +39,16 @@ public class ListItemAdapter extends ArrayAdapter<ListItem> {
         }
 
         currentName.setText(currentItem.getTagText());
+
+        CheckBox checkBox = convertView.findViewById(R.id.include_image);
+        checkBox.setChecked(currentItem.isChecked());
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                currentItem.setChecked(isChecked);
+                // Perform any additional actions here if necessary
+            }
+        });
         return convertView;
     }
 

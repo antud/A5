@@ -6,10 +6,14 @@ public class ListItem {
     private int imageResource;
     private Bitmap imageBitmap;
     private String tagText;
+    private boolean isChecked;
+    private String imageType;
 
-    public ListItem(int imageResourceId, String tagText) {
+    public ListItem(int imageResourceId, String tagText, String imageType) {
         this.imageResource = imageResourceId;
         this.tagText = tagText;
+        this.imageType = imageType;
+        this.isChecked = false;
     }
 
     //using Bitmap instead of int works better for photos?
@@ -28,5 +32,17 @@ public class ListItem {
 
     public String getTagText() {
         return tagText;
+    }
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
+
+    public String getImageType() {
+        return imageType;
     }
 }
