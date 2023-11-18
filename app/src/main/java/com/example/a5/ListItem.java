@@ -7,16 +7,7 @@ public class ListItem {
     private Bitmap imageBitmap;
     private String tagText;
     private boolean isChecked;
-    private String imageType;
 
-    public ListItem(int imageResourceId, String tagText, String imageType) {
-        this.imageResource = imageResourceId;
-        this.tagText = tagText;
-        this.imageType = imageType;
-        this.isChecked = false;
-    }
-
-    //using Bitmap instead of int works better for photos?
     public ListItem(Bitmap imageBitmap, String tagText) {
         this.imageBitmap = imageBitmap;
         this.tagText = tagText;
@@ -40,9 +31,5 @@ public class ListItem {
 
     public void setChecked(boolean checked) {
         isChecked = checked;
-    }
-
-    public String getImageType() {
-        return imageType;
     }
 }

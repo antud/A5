@@ -11,6 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+
     <ImageView
         android:id="@+id/image_in_list"
         android:layout_width="125dp"
@@ -18,9 +19,8 @@
 
     <TextView
         android:id="@+id/text_in_list"
-        android:layout_width="275dp"
+        android:layout_width="235dp"
         android:layout_height="73dp"
         android:ellipsize="end"
-        android:maxLines="2" />
-
+        android:maxLines="3" />
 </LinearLayout>

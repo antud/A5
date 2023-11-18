@@ -129,7 +129,7 @@ public class PhotoTaggerActivity extends AppCompatActivity {
             if (annotations != null && !annotations.isEmpty()) {
                 StringBuilder tagsBuilder = new StringBuilder();
                 for (EntityAnnotation annotation : annotations) {
-                    if (annotation.getScore() != null && annotation.getScore() >= 0.85) {
+                    if (annotation.getScore() != null && annotation.getScore() >= 0.80) {
                         tagsBuilder.append(annotation.getDescription()).append(", ");
                     }
                     if (annotation.getScore() < 0.85) {

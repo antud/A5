@@ -87,12 +87,6 @@
         android:layout_width="match_parent"
         android:layout_height="225dp" />
 
-<!--    <com.example.a5.MyDrawingArea-->
-    <!--        android:id="@+id/blank_drawing_area"-->
-    <!--        android:layout_width="1dp"-->
-    <!--        android:layout_height="1dp"-->
-    <!--        android:scaleType="fitCenter" />-->
-
     <Button
         android:id="@+id/btnBack"
         android:layout_width="wrap_content"

@@ -14,6 +14,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -44,17 +45,15 @@ public class StoryTellerActivity extends AppCompatActivity {
     private CheckBox includeSketchesToggle;
 
     boolean isSketchIncluded;
-    TextView tagField;
     EditText searchField;
     ListView lv;
     ListItemAdapter adapter;
-    MyDrawingArea mda;
     String url = "https://api.textcortex.com/v1/texts/social-media-posts";
     String contextString;
     String keywordsString;
-    EditText context;
-    EditText keywords;
     TextView story;
+    TextView selectedStoryTags;
+    StringBuilder selectedTags;
 
 
     @Override
@@ -76,9 +75,7 @@ public class StoryTellerActivity extends AppCompatActivity {
         includeSketchesToggle = findViewById(R.id.include_sketches_toggle);
         includeSketchesToggle.setChecked(true);
 
-        includeSketchesToggle.setOnCheckedChangeListener(((buttonView, isChecked) -> {
-            updateImageList();
-        }));
+        includeSketchesToggle.setOnCheckedChangeListener((buttonView, isChecked) -> updateImageList());
 
         ArrayList<ListItem> latestImages = showLatestImages();
         adapter.updateData(latestImages);
@@ -89,8 +86,30 @@ public class StoryTellerActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        selectedStoryTags = findViewById(R.id.story_selected_tags);
+        story = findViewById(R.id.generated_story);
+
+
+        adapter.setOnItemCheckListener(() -> {
+            updateSelectedTagText();
+        });
+
 
     }
+
+    private void updateSelectedTagText() {
+        selectedTags = new StringBuilder();
+        for (ListItem listItem : adapter.getDataList()) {
+            if (listItem.isChecked()) {
+                if (selectedTags.length() > 0) {
+                    selectedTags.append(", ");
+                }
+                selectedTags.append(listItem.getTagText());
+            }
+        }
+        selectedStoryTags.setText(selectedTags);
+    }
+
 
     private void updateImageList() {
         ArrayList<ListItem> latestImages = showLatestImages();
@@ -99,102 +118,55 @@ public class StoryTellerActivity extends AppCompatActivity {
     }
 
     public void onFind(View view) {
-        Cursor c;
         String tagText = searchField.getText().toString();
+        boolean isSketchIncluded = includeSketchesToggle.isChecked();
         ArrayList<ListItem> searchResults = new ArrayList<>();
-
-        isSketchIncluded = includeSketchesToggle.isChecked();
 
         if (tagText.equals("")) {
             searchResults = showLatestImages();
         } else {
+            String[] searchTags = tagText.split(",");
+            StringBuilder queryBuilder = new StringBuilder();
+            queryBuilder.append("SELECT * FROM BOTH WHERE ");
+
+            if (!isSketchIncluded) {
+                queryBuilder.append("TYPE = 'photo' AND ");
+            }
+
+            for (int i = 0; i < searchTags.length; i++) {
+                if (i > 0) {
+                    queryBuilder.append(" OR ");
+                }
+                queryBuilder.append("TAGS LIKE ?");
+            }
+
+            queryBuilder.append(" ORDER BY DATE DESC");
+            String query = queryBuilder.toString();
+
+            String[] queryParameters = new String[searchTags.length];
+            for (int i = 0; i < searchTags.length; i++) {
+                queryParameters[i] = "%" + searchTags[i].trim() + "%";
+            }
+
+            Cursor c = null;
             try {
-                if (isSketchIncluded) {
-                    // split entry by commas
-                    String[] searchTags = tagText.split(",");
-
-                    // make query for each tag, combine with or
-                    StringBuilder queryBuilder = new StringBuilder();
-                    queryBuilder.append("SELECT * FROM BOTH WHERE ");
-
-                    for (int i = 0; i < searchTags.length; i++) {
-                        if (i > 0) {
-                            queryBuilder.append(" OR ");
-                        }
-                        queryBuilder.append("TAGS LIKE ?");
-                    }
-
-                    queryBuilder.append(" ORDER BY DATE DESC");
-                    String query = queryBuilder.toString();
-
-                    // arr for each param of search tag
-                    String[] queryParameters = new String[searchTags.length];
-
-                    // run the query for each param
-                    for (int i = 0; i < searchTags.length; i++) {
-                        queryParameters[i] = "%" + searchTags[i].trim() + "%";
-                    }
-
-                    //execute the q
-                    c = bigDb.rawQuery(query, queryParameters);
-
-                    int position = 1;
-                    // populate search images
-                    while (c.moveToNext() && position <= 3) {
-                        byte[] ba = c.getBlob(0);
-                        String date = c.getString(1);
-                        String tagsInDatabase = c.getString(2);
-
-                        searchResults.add(new ListItem(BitmapFactory.decodeByteArray(ba, 0, ba.length), tagsInDatabase + "\n" + date));
-                        position++;
-                    }
-                } else {
-                    // split entry by commas
-                    String[] searchTags = tagText.split(",");
-
-                    // make query for each tag, combine with or
-                    StringBuilder queryBuilder = new StringBuilder();
-                    queryBuilder.append("SELECT * FROM BOTH WHERE TYPE = 'photo' AND ");
-
-                    for (int i = 0; i < searchTags.length; i++) {
-                        if (i > 0) {
-                            queryBuilder.append(" OR ");
-                        }
-                        queryBuilder.append("TAGS LIKE ?");
-                    }
-
-                    queryBuilder.append(" ORDER BY DATE DESC");
-                    String query = queryBuilder.toString();
-
-                    // arr for each param of search tag
-                    String[] queryParameters = new String[searchTags.length];
-
-                    // run the query for each param
-                    for (int i = 0; i < searchTags.length; i++) {
-                        queryParameters[i] = "%" + searchTags[i].trim() + "%";
-                    }
-
-                    //execute the q
-                    c = bigDb.rawQuery(query, queryParameters);
-
-                    int position = 1;
-                    // populate search images
-                    while (c.moveToNext() && position <= 3) {
-                        byte[] ba = c.getBlob(0);
-                        String date = c.getString(1);
-                        String tagsInDatabase = c.getString(2);
-
-                        searchResults.add(new ListItem(BitmapFactory.decodeByteArray(ba, 0, ba.length), tagsInDatabase + "\n" + date));
-                        position++;
-                    }
+                c = bigDb.rawQuery(query, queryParameters);
+                while (c.moveToNext()) {
+                    byte[] ba = c.getBlob(0);
+                    String date = c.getString(1);
+                    String tagsInDatabase = c.getString(2);
+                    searchResults.add(new ListItem(BitmapFactory.decodeByteArray(ba, 0, ba.length), tagsInDatabase + "\n" + date));
                 }
             } catch (CursorIndexOutOfBoundsException e) {
-                //dont need to show blank image since if there is not enough found results, the list wont have an empty slot
+                Log.e("ERROR", e.toString());
+            } finally {
+                if (c != null && !c.isClosed()) {
+                    c.close();
+                }
             }
         }
         adapter.updateData(searchResults);
     }
-
 
     public ArrayList<ListItem> showLatestImages() {
         isSketchIncluded = includeSketchesToggle.isChecked();
@@ -207,7 +179,6 @@ public class StoryTellerActivity extends AppCompatActivity {
             query = "SELECT * FROM BOTH WHERE TYPE = 'photo'";
         }
 
-        //this needs to have a check on the toggle, append WHERE TYPE = "type"
         Cursor c = bigDb.rawQuery(query, null);
         ArrayList<ListItem> latestImages = new ArrayList<>();
 
@@ -268,14 +239,24 @@ public class StoryTellerActivity extends AppCompatActivity {
     }
 
     public void onSubmit(View view) throws JSONException {
-        contextString = context.getText().toString();
-        keywordsString = keywords.getText().toString();
+        Toast toast = Toast.makeText(this, "Please select some tags", Toast.LENGTH_SHORT);
+        try {
+            contextString = "story";
+            keywordsString = selectedTags.toString();
+            if (keywordsString.isEmpty() || keywordsString.equals("")) {
+                toast.show();
+                story.setText("");
+                throw new RuntimeException();
+            }
 
-        String[] k = keywordsString.split(",");
+            String[] k = keywordsString.split(",");
 
-        for (int i = 0; i < k.length; i++) {
-            k[i] = k[i].trim();
+            for (int i = 0; i < k.length; i++) {
+                k[i] = k[i].trim();
+            }
+            makeHttpRequest(contextString, k);
+        } catch (Exception e) {
+            toast.show();
         }
-        makeHttpRequest(contextString, k);
     }
 }
